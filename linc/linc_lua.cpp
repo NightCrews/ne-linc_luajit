@@ -217,7 +217,14 @@ namespace linc {
 
                 lua_pushvalue(L,-1);    /* function to be called */
                 lua_pushvalue(L,i); /* value to print */
-                lua_call(L,1,1);
+                /* HX: protected call - a mod overriding or nil-ing the global
+                   `tostring` would otherwise raise an unprotected error here,
+                   which terminates the whole game with a LuaJIT PANIC */
+                if (lua_pcall(L,1,1,0))
+                {
+                    lua_pop(L,1);           /* drop the error message */
+                    lua_pushliteral(L,"?"); /* placeholder result */
+                }
 
                 s = lua_tolstring(L,-1, &l); /* get result */
                 if ( s == NULL ){
